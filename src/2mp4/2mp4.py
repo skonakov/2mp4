@@ -168,9 +168,8 @@ def convert(info, file):
 
 
 def main():
-    print __file__
     parser = argparse.ArgumentParser(
-        prog='vconv'
+        prog=__name__.split('.')[0]
     )
     parser.add_argument(
         '-f', '--file',
@@ -181,6 +180,3 @@ def main():
     info = get_media_info(filename)
     convert(info, filename)
 
-
-if __name__ == "__main__":
-    main()
