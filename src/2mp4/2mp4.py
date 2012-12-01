@@ -45,7 +45,7 @@ def get_media_info(file):
         elif track.track_type == 'General':
             result.general = track
         else:
-            raise Exception('Enexpected track type: %s' % track.track_type)
+            print 'Ignoring track, type: %s' % track.track_type
 
     return result
 
