@@ -138,7 +138,7 @@ def convert(info, file):
         opts = input_ops + video_opts + [
             '-an',
             '-pass', '1',
-            '-threads', '2',
+#            '-threads', '2',
             '-y',
             '-f', 'rawvideo',
             '/dev/null'
@@ -157,9 +157,9 @@ def convert(info, file):
         )
         opts = input_ops + video_opts + audio_opts + [
             '-pass', '2',
-            '-threads', '2',
+#            '-threads', '2',
             '-y',
-            os.path.join(info.general.dir, out_file_name)
+            os.path.join(info.general.folder_name, out_file_name)
         ]
         p = sh.ffmpeg(
             *opts,
