@@ -11,21 +11,17 @@ Topic :: Software Development :: Compilers
 Operating System :: Unix
 """
 
-def read(*rel_names):
-    return open(os.path.join(os.path.dirname(__file__), *rel_names)).read()
-
-
 setup(
     name='2mp4',
     version='0.0.1',
-    #url='http://slimit.org',
+    url='https://github.com/skonakov/2mp4.git',
     license='MIT',
     description='2mp4 - TBD',
     author='Sergey Konakov',
     author_email='skonakov@gmail.com',
     packages=find_packages('src'),
     package_dir={'': 'src'},
-    install_requires=['sh', 'progress'],
+    install_requires=['sh', 'progressbar', 'pymediainfo'],
     zip_safe=False,
     entry_points="""\
     [console_scripts]

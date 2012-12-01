@@ -4,6 +4,7 @@ import re
 import sh
 import sys
 
+from cStringIO import StringIO
 from progressbar import (
     ProgressBar,
     Percentage,
@@ -12,6 +13,7 @@ from progressbar import (
     FileTransferSpeed,
     Timer
 )
+from pymediainfo import MediaInfo
 
 
 class AttrDict(dict):
@@ -21,26 +23,27 @@ class AttrDict(dict):
 
 
 def get_media_info(file):
-    mediainfo = sh.mediainfo.bake(file)
-    return AttrDict(
-        format=mediainfo(inform='General;%Format%').strip(),
-        file_name=mediainfo(inform='General;%FileName%').strip(),
-        file_extension=mediainfo(inform='General;%FileExtension%').strip(),
-        dir=mediainfo(inform='General;%FolderName%').strip(),
-        video=AttrDict(
-            bit_rate=mediainfo(inform='Video;%BitRate%').strip(),
-            duration=mediainfo(inform='Video;%Duration%').strip(),
-            size=mediainfo(inform='Video;%StreamSize%').strip(),
-            format=mediainfo(inform='Video;%Format%').strip(),
-            frame_count=mediainfo(inform='Video;%FrameCount%').strip()
-        ),
-        audio=AttrDict(
-            bit_rate=mediainfo(inform='Audio;%BitRate%').strip(),
-            duration=mediainfo(inform='Audio;%Duration%').strip(),
-            size=mediainfo(inform='Audio;%StreamSize%').strip(),
-            format=mediainfo(inform='Audio;%Format%').strip(),
-        )
+    result = AttrDict()
+    xmlIO  = StringIO()
+    sh.mediainfo(
+        '--Output=XML',
+        '-f', file,
+        _out=xmlIO
     )
+    mediainfo = MediaInfo(xmlIO.getvalue())
+    for track in mediainfo.tracks:
+        if track.track_type == 'Video':
+            result.video = track
+        elif track.track_type == 'Audio':
+            result.audio = track
+        elif track.track_type == 'Text':
+            result.text = track
+        elif track.track_type == 'General':
+            result.general = track
+        else:
+            raise Exception('Enexpected track type: %s' % track.track_type)
+
+    return result
 
 
 class EncodingProgress:
@@ -116,7 +119,7 @@ def convert(info, file):
         file,
         _bg=True
     )
-    out_file_name = '%s.mp4' % (info['file_name'])
+    out_file_name = '%s.mp4' % file
     sys.stderr.write('Encoding %s -> %s\n' % (file, out_file_name))
     sys.stdout.write('Encoding %s -> %s\n' % (file, out_file_name))
     if method == '1pass':
@@ -125,7 +128,7 @@ def convert(info, file):
             '-y',
             '%s/%s' % (info['dir'], out_file_name),
         ]
-        progress = EncodingProgress('Pass 1 of 1:', info['video']['frame_count'])
+        progress = EncodingProgress('Pass 1 of 1:', info.video.frame_count)
         p = sh.ffmpeg(
             *opts,
             _err=progress.process_ffmpeg_line,
@@ -134,7 +137,7 @@ def convert(info, file):
         p.wait()
         progress.finish()
     elif method == '2pass':
-        pass1_progress = EncodingProgress('Pass 1 of 2: ', info['video']['frame_count'])
+        pass1_progress = EncodingProgress('Pass 1 of 2: ', info.video.frame_count)
         opts = input_ops + video_opts + [
             '-an',
             '-pass', '1',
@@ -176,7 +179,7 @@ def main():
         required=True
     )
     args = parser.parse_args()
-    filename = unicode(args.file.strip(), encoding='UTF-8')
+    filename = args.file.strip()
     info = get_media_info(filename)
     convert(info, filename)
 
