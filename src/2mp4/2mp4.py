@@ -1,5 +1,6 @@
 
 import argparse
+import os
 import re
 import sh
 import sys
@@ -119,14 +120,14 @@ def convert(info, file):
         file,
         _bg=True
     )
-    out_file_name = '%s.mp4' % file
+    out_file_name = '%s.mp4' % info.general.file_name
     sys.stderr.write('Encoding %s -> %s\n' % (file, out_file_name))
     sys.stdout.write('Encoding %s -> %s\n' % (file, out_file_name))
     if method == '1pass':
         opts = input_ops + video_opts + audio_opts + [
-            '-threads', '2',
+            #'-threads', '4',
             '-y',
-            '%s/%s' % (info['dir'], out_file_name),
+            os.path.join(info.general.folder_name, out_file_name)
         ]
         progress = EncodingProgress('Pass 1 of 1:', info.video.frame_count)
         p = sh.ffmpeg(
