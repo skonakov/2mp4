@@ -1,6 +1,7 @@
 
 import argparse
 import os
+import psutil
 import re
 import sh
 import sys
@@ -15,6 +16,8 @@ from progressbar import (
     Timer
 )
 from pymediainfo import MediaInfo
+
+PROG_NAME = __name__.split('.')[0]
 
 
 class AttrDict(dict):
@@ -114,18 +117,11 @@ def convert(info, file):
         '-i', '%s' % file,
     ]
 
-    sh.vmtouch(
-        '-m', '10G',
-        '-vt',
-        file,
-        _bg=True
-    )
     out_file_name = '%s.mp4' % info.general.file_name
     sys.stderr.write('Encoding %s -> %s\n' % (file, out_file_name))
     sys.stdout.write('Encoding %s -> %s\n' % (file, out_file_name))
     if method == '1pass':
         opts = input_ops + video_opts + audio_opts + [
-            #'-threads', '4',
             '-y',
             os.path.join(info.general.folder_name, out_file_name)
         ]
@@ -142,7 +138,7 @@ def convert(info, file):
         opts = input_ops + video_opts + [
             '-an',
             '-pass', '1',
-            '-threads', '4',
+            '-threads', '2',
             '-y',
             '-f', 'rawvideo',
             '/dev/null'
@@ -155,12 +151,15 @@ def convert(info, file):
         p.wait()
         pass1_progress.finish()
 
-        pass2_progress = EncodingProgress('Pass 2 of 2: ', info['video']['frame_count'])
+        pass2_progress = EncodingProgress(
+            'Pass 2 of 2: ',
+            info.video.frame_count
+        )
         opts = input_ops + video_opts + audio_opts + [
             '-pass', '2',
-            '-threads', '8',
+            '-threads', '2',
             '-y',
-            '%s/%s' % (info['dir'], out_file_name)
+            os.path.join(info.general.dir, out_file_name)
         ]
         p = sh.ffmpeg(
             *opts,
@@ -171,9 +170,38 @@ def convert(info, file):
         pass2_progress.finish()
 
 
+def check_required_programs():
+    # Check that mediainfo is installed
+    if sh.which('mediainfo') is None:
+        print '%s: Cannot find mediainfo, please install before continuing.' % (
+            PROG_NAME
+        )
+        exit(1)
+
+    # Check that ffmpeg is installed
+    if sh.which('ffmpeg') is None:
+        print '%s: Cannot find ffmpeg, please install before continuing.' % (
+            PROG_NAME
+        )
+
+
+
+
+def cache_file(filename):
+    if sh.which('vmtouch') is None:
+        return
+
+    sh.vmtouch(
+        '-m', psutil.avail_phymem(),
+        '-vt',
+        filename,
+        _bg=True
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(
-        prog=__name__.split('.')[0]
+        prog=PROG_NAME
     )
     parser.add_argument(
         '-f', '--file',
@@ -181,6 +209,12 @@ def main():
     )
     args = parser.parse_args()
     filename = args.file.strip()
+    if not os.path.isfile(filename):
+        print '%s: Cannot find file %s' % (PROG_NAME, filename)
+        exit(1)
+
+    cache_file(filename)
+
     info = get_media_info(filename)
     convert(info, filename)
 
