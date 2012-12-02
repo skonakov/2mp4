@@ -61,7 +61,6 @@ class EncodingProgress:
             ETA(), ' ',
             FileTransferSpeed(unit='Frames')
         ]
-        print total_frames
         self.pbar = ProgressBar(
             widgets=widgets,
             maxval=int(total_frames),
@@ -138,7 +137,6 @@ def convert(info, file):
         opts = input_ops + video_opts + [
             '-an',
             '-pass', '1',
-#            '-threads', '2',
             '-y',
             '-f', 'rawvideo',
             '/dev/null'
@@ -157,7 +155,6 @@ def convert(info, file):
         )
         opts = input_ops + video_opts + audio_opts + [
             '-pass', '2',
-#            '-threads', '2',
             '-y',
             os.path.join(info.general.folder_name, out_file_name)
         ]
@@ -184,7 +181,17 @@ def check_required_programs():
             PROG_NAME
         )
 
-
+    out = StringIO()
+    sh.ffmpeg(
+        '-encoders',
+        _out=out
+    )
+    if 'libfaac' not in out.getvalue():
+        print "%s: Installed version of ffmpeg doesn't support libfaac" % PROG_NAME
+        exit(1)
+    if 'libx264' not in out.getvalue():
+        print "%s: Installed version of ffmeg doesn't support libx264" % PROG_NAME
+        exit(1)
 
 
 def cache_file(filename):
@@ -207,6 +214,9 @@ def main():
         '-f', '--file',
         required=True
     )
+
+    check_required_programs()
+
     args = parser.parse_args()
     filename = args.file.strip()
     if not os.path.isfile(filename):
