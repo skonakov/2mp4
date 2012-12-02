@@ -1,12 +1,12 @@
 
 import argparse
+import tempfile
 import os
 import psutil
 import re
 import sh
 import sys
 
-from cStringIO import StringIO
 from progressbar import (
     ProgressBar,
     Percentage,
@@ -16,6 +16,7 @@ from progressbar import (
     Timer
 )
 from pymediainfo import MediaInfo
+from StringIO import StringIO
 
 PROG_NAME = __name__.split('.')[0]
 
@@ -87,7 +88,10 @@ class EncodingProgress:
         self.pbar.finish()
 
 
-def convert(info, file):
+def convert(filename):
+    cache_file(filename)
+    info = get_media_info(filename)
+
     if info.video.format == 'AVC':
         method = '1pass'
         video_opts = [
@@ -113,12 +117,12 @@ def convert(info, file):
         ]
 
     input_ops = [
-        '-i', '%s' % file,
+        '-i', '%s' % filename,
     ]
 
     out_file_name = '%s.mp4' % info.general.file_name
-    sys.stderr.write('Encoding %s -> %s\n' % (file, out_file_name))
-    sys.stdout.write('Encoding %s -> %s\n' % (file, out_file_name))
+    sys.stderr.write('Encoding %s -> %s\n' % (filename, out_file_name))
+    sys.stdout.write('Encoding %s -> %s\n' % (filename, out_file_name))
     if method == '1pass':
         opts = input_ops + video_opts + audio_opts + [
             '-y',
@@ -219,12 +223,17 @@ def main():
 
     args = parser.parse_args()
     filename = args.file.strip()
-    if not os.path.isfile(filename):
-        print '%s: Cannot find file %s' % (PROG_NAME, filename)
+    if not os.path.exists(filename):
+        print '%s: %s: No such file or directory' % (PROG_NAME, filename)
         exit(1)
 
-    cache_file(filename)
+    os.chdir(tempfile.gettempdir())
 
-    info = get_media_info(filename)
-    convert(info, filename)
-
+    if os.path.isfile(filename):
+        convert(filename)
+    else:
+        for file in os.listdir(filename):
+            name, ext = os.path.splitext(file)
+            file = os.path.join(filename, file)
+            if os.path.isfile(file) and ext.lower() in ['.wmv']:
+                convert(file)

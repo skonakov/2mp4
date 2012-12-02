@@ -21,7 +21,7 @@ setup(
     author_email='skonakov@gmail.com',
     packages=find_packages('src'),
     package_dir={'': 'src'},
-    install_requires=['sh', 'progressbar', 'pymediainfo'],
+    install_requires=['sh', 'progressbar', 'pymediainfo', 'psutil'],
     zip_safe=False,
     entry_points="""\
     [console_scripts]
