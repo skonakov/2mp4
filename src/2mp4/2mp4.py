@@ -19,6 +19,13 @@ from pymediainfo import MediaInfo
 from StringIO import StringIO
 
 PROG_NAME = __name__.split('.')[0]
+VIDEO_EXTENSIONS = (
+    '.avi',
+    '.mkv',
+    '.mpeg',
+    '.mpg',
+    '.wmv'
+)
 
 
 class AttrDict(dict):
@@ -121,12 +128,16 @@ def convert(filename):
     ]
 
     out_file_name = '%s.mp4' % info.general.file_name
+    out_path = os.path.join(info.general.folder_name, out_file_name)
     sys.stderr.write('Encoding %s -> %s\n' % (filename, out_file_name))
-    sys.stdout.write('Encoding %s -> %s\n' % (filename, out_file_name))
+
+    if os.path.exists(out_path):
+        sys.stderr.write('Destination file exists, skipping...')
+
     if method == '1pass':
         opts = input_ops + video_opts + audio_opts + [
             '-y',
-            os.path.join(info.general.folder_name, out_file_name)
+            out_path
         ]
         progress = EncodingProgress('Pass 1 of 1:', info.video.frame_count)
         p = sh.ffmpeg(
@@ -160,7 +171,7 @@ def convert(filename):
         opts = input_ops + video_opts + audio_opts + [
             '-pass', '2',
             '-y',
-            os.path.join(info.general.folder_name, out_file_name)
+            out_path
         ]
         p = sh.ffmpeg(
             *opts,
@@ -215,8 +226,8 @@ def main():
         prog=PROG_NAME
     )
     parser.add_argument(
-        '-f', '--file',
-        required=True
+        'file',
+        help='file or directory to convert to mp4'
     )
 
     check_required_programs()
@@ -235,5 +246,5 @@ def main():
         for file in os.listdir(filename):
             name, ext = os.path.splitext(file)
             file = os.path.join(filename, file)
-            if os.path.isfile(file) and ext.lower() in ['.wmv']:
+            if os.path.isfile(file) and ext.lower() in VIDEO_EXTENSIONS:
                 convert(file)
