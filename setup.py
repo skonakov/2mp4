@@ -4,10 +4,10 @@ from setuptools import setup, find_packages
 
 
 classifiers = """\
-Intended Audience :: Developers
+Intended Audience :: End Users/Desktop
 License :: OSI Approved :: MIT License
 Programming Language :: Python
-Topic :: Software Development :: Compilers
+Topic :: Multimedia :: Video :: Conversion
 Operating System :: Unix
 """
 
@@ -15,8 +15,9 @@ setup(
     name='2mp4',
     version='0.0.1',
     url='https://github.com/skonakov/2mp4.git',
+    download_url='https://github.com/skonakov/2mp4/tarball/0.0.1',
     license='MIT',
-    description='2mp4 - TBD',
+    description='Simple utility to convert your video files into mp4s.',
     author='Sergey Konakov',
     author_email='skonakov@gmail.com',
     packages=find_packages('src'),
