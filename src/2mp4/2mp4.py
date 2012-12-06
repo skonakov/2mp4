@@ -224,14 +224,14 @@ def check_required_programs():
 
     out = StringIO()
     sh.ffmpeg(
-        '-encoders',
+        '-codecs',
         _out=out
     )
-    if 'libfaac' not in out.getvalue():
-        print "%s: Installed version of ffmpeg doesn't support libfaac" % PROG_NAME
-        exit(1)
-    if 'libx264' not in out.getvalue():
-        print "%s: Installed version of ffmeg doesn't support libx264" % PROG_NAME
+    if re.search(r'DE.* h264', out.getvalue()) is None:
+        print "%s: Installed version of ffmeg doesn't support libx264" % (
+            PROG_NAME
+        )
+        print out.getvalue()
         exit(1)
 
 
