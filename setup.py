@@ -11,9 +11,9 @@ Operating System :: Unix
 
 setup(
     name='2mp4',
-    version='0.0.3',
+    version='0.0.4',
     url='https://github.com/skonakov/2mp4.git',
-    download_url='https://github.com/skonakov/2mp4/tarball/0.0.3',
+    download_url='https://github.com/skonakov/2mp4/tarball/0.0.4',
     license='MIT',
     description='Simple utility to convert your video files into mp4s.',
     author='Sergey Konakov',

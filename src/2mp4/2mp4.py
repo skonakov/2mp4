@@ -231,7 +231,6 @@ def check_required_programs():
         print "%s: Installed version of ffmeg doesn't support libx264" % (
             PROG_NAME
         )
-        print out.getvalue()
         exit(1)
 
 
