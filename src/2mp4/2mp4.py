@@ -227,7 +227,9 @@ def check_required_programs():
         '-codecs',
         _out=out
     )
-    if re.search(r'DE.* h264', out.getvalue()) is None:
+    h264_match = re.search(r'DE.* h264', out.getvalue())
+    libx264_match = re.search(r' E.* libx264', out.getvalue())
+    if h264_match is None and libx264_match is None:
         print "%s: Installed version of ffmeg doesn't support libx264" % (
             PROG_NAME
         )
