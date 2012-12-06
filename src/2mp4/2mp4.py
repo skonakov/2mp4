@@ -25,12 +25,12 @@
 __author__ = 'Sergey Konakov <skonakov@gmail.com>'
 
 import argparse
-import tempfile
 import os
 import psutil
 import re
 import sh
 import sys
+import tempfile
 
 from progressbar import (
     ProgressBar,
@@ -144,8 +144,9 @@ def convert(filename):
         ]
     else:
         audio_opts = [
-            '-codec:a', 'libfaac',
-            '-b:a', '160K'
+            '-codec:a', 'aac',
+            '-b:a', '160K',
+            '-strict', 'experimental'
         ]
 
     input_ops = [
@@ -239,7 +240,7 @@ def cache_file(filename):
         return
 
     sh.vmtouch(
-        '-m', psutil.avail_phymem(),
+        '-m', '3G'
         '-vt',
         filename,
         _bg=True
@@ -248,16 +249,20 @@ def cache_file(filename):
 
 def main():
     parser = argparse.ArgumentParser(
-        prog=PROG_NAME
+        prog=PROG_NAME,
+        description="""\
+            Convert [input_file] to mp4. The output video file will be created
+            in the same directory named [input_file].mp4
+        """
     )
     parser.add_argument(
-        'file',
+        'input_file',
         help='file or directory to convert to mp4'
     )
 
     args = parser.parse_args()
-    filename = args.file.strip()
-    if not os.path.exists(filename):
+    input_file = args.input_file.strip()
+    if not os.path.exists(input_file):
         print '%s: %s: No such file or directory' % (PROG_NAME, filename)
         exit(1)
 
@@ -265,11 +270,11 @@ def main():
 
     os.chdir(tempfile.gettempdir())
 
-    if os.path.isfile(filename):
-        convert(filename)
+    if os.path.isfile(input_file):
+        convert(input_file)
     else:
-        for file in os.listdir(filename):
+        for file in os.listdir(input_file):
             name, ext = os.path.splitext(file)
-            file = os.path.join(filename, file)
+            file = os.path.join(input_file, file)
             if os.path.isfile(file) and ext.lower() in VIDEO_EXTENSIONS:
                 convert(file)

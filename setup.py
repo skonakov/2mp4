@@ -1,5 +1,3 @@
-import os
-
 from setuptools import setup, find_packages
 
 
@@ -13,16 +11,16 @@ Operating System :: Unix
 
 setup(
     name='2mp4',
-    version='0.0.1',
+    version='0.0.2',
     url='https://github.com/skonakov/2mp4.git',
-    download_url='https://github.com/skonakov/2mp4/tarball/0.0.1',
+    download_url='https://github.com/skonakov/2mp4/tarball/0.0.2',
     license='MIT',
     description='Simple utility to convert your video files into mp4s.',
     author='Sergey Konakov',
     author_email='skonakov@gmail.com',
     packages=find_packages('src'),
     package_dir={'': 'src'},
-    install_requires=['sh', 'progressbar', 'pymediainfo', 'psutil'],
+    install_requires=['sh', 'progressbar', 'pymediainfo'],
     zip_safe=False,
     entry_points="""\
     [console_scripts]
@@ -31,4 +29,4 @@ setup(
     classifiers=filter(None, classifiers.split('\n')),
     #long_description=read('README.rst') + '\n\n' + read('CHANGES'),
     #extras_require={'test': []}
-    )
+)
