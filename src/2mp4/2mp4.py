@@ -255,13 +255,13 @@ def main():
         help='file or directory to convert to mp4'
     )
 
-    check_required_programs()
-
     args = parser.parse_args()
     filename = args.file.strip()
     if not os.path.exists(filename):
         print '%s: %s: No such file or directory' % (PROG_NAME, filename)
         exit(1)
+
+    check_required_programs()
 
     os.chdir(tempfile.gettempdir())
 
