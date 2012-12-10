@@ -34,3 +34,6 @@ nosetests.xml
 .project
 .pydevproject
 .idea
+
+# Version file i use for pypi packaging
+.version
