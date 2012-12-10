@@ -26,7 +26,6 @@ __author__ = 'Sergey Konakov <skonakov@gmail.com>'
 
 import argparse
 import os
-import psutil
 import re
 import sh
 import sys
@@ -43,6 +42,7 @@ from progressbar import (
 from pymediainfo import MediaInfo
 from StringIO import StringIO
 
+
 PROG_NAME = __name__.split('.')[0]
 VIDEO_EXTENSIONS = (
     '.avi',
@@ -57,6 +57,9 @@ class AttrDict(dict):
     def __init__(self, *a, **kw):
         dict.__init__(self, *a, **kw)
         self.__dict__ = self
+
+
+config = AttrDict()
 
 
 def get_media_info(file):
@@ -78,7 +81,7 @@ def get_media_info(file):
         elif track.track_type == 'General':
             result.general = track
         else:
-            print 'Ignoring track, type: %s' % track.track_type
+            pass
 
     return result
 
@@ -120,7 +123,7 @@ class EncodingProgress:
         self.pbar.finish()
 
 
-def convert(filename):
+def convert(filename, args):
     cache_file(filename)
     info = get_media_info(filename)
 
@@ -132,7 +135,7 @@ def convert(filename):
     else:
         method = '2pass'
         video_opts = [
-            '-b:v', info.video.bit_rate,
+            '-b:v', str(info.video.bit_rate),
             '-codec:v', 'libx264',
             '-profile:v', 'high',
             '-level', '4.1'
@@ -143,10 +146,8 @@ def convert(filename):
             '-codec:a', 'copy'
         ]
     else:
-        audio_opts = [
-            '-codec:a', 'aac',
-            '-b:a', '160K',
-            '-strict', 'experimental'
+        audio_opts = config.audio_encoder_opts + [
+            '-b:a', '160K'
         ]
 
     input_ops = [
@@ -166,13 +167,16 @@ def convert(filename):
             out_path
         ]
         progress = EncodingProgress('Pass 1 of 1:', info.video.frame_count)
-        p = sh.ffmpeg(
-            *opts,
-            _err=progress.process_ffmpeg_line,
-            _err_bufsize=256
-        )
-        p.wait()
-        progress.finish()
+        if args.dry_run:
+            print 'ffmpeg ' + ' '.join(opts)
+        else:
+            p = sh.ffmpeg(
+                *opts,
+                _err=progress.process_ffmpeg_line,
+                _err_bufsize=256
+            )
+            p.wait()
+            progress.finish()
     elif method == '2pass':
         pass1_progress = EncodingProgress('Pass 1 of 2: ', info.video.frame_count)
         opts = input_ops + video_opts + [
@@ -182,13 +186,16 @@ def convert(filename):
             '-f', 'rawvideo',
             '/dev/null'
         ]
-        p = sh.ffmpeg(
-            *opts,
-            _err=pass1_progress.process_ffmpeg_line,
-            _err_bufsize=256
-        )
-        p.wait()
-        pass1_progress.finish()
+        if args.dry_run:
+            print 'ffmpeg ' + ' '.join(opts)
+        else:
+            p = sh.ffmpeg(
+                *opts,
+                _err=pass1_progress.process_ffmpeg_line,
+                _err_bufsize=256
+            )
+            p.wait()
+            pass1_progress.finish()
 
         pass2_progress = EncodingProgress(
             'Pass 2 of 2: ',
@@ -199,13 +206,16 @@ def convert(filename):
             '-y',
             out_path
         ]
-        p = sh.ffmpeg(
-            *opts,
-            _err=pass2_progress.process_ffmpeg_line,
-            _err_bufsize=256
-        )
-        p.wait()
-        pass2_progress.finish()
+        if args.dry_run:
+            print 'ffmpeg ' + ' '.join(opts)
+        else:
+            p = sh.ffmpeg(
+                *opts,
+                _err=pass2_progress.process_ffmpeg_line,
+                _err_bufsize=256
+            )
+            p.wait()
+            pass2_progress.finish()
 
 
 def check_required_programs():
@@ -218,22 +228,38 @@ def check_required_programs():
 
     # Check that ffmpeg is installed
     if sh.which('ffmpeg') is None:
-        print '%s: Cannot find ffmpeg, please install before continuing.' % (
+        print (
+            '%s: Cannot find ffmpeg. '
+            'Please install ffmpeg version 1.0 or later.'
+        ) % (
             PROG_NAME
         )
 
     out = StringIO()
     sh.ffmpeg(
-        '-codecs',
+        '-encoders',
         _out=out
     )
-    h264_match = re.search(r'DE.* h264', out.getvalue())
-    libx264_match = re.search(r' E.* libx264', out.getvalue())
-    if h264_match is None and libx264_match is None:
-        print "%s: Installed version of ffmeg doesn't support libx264" % (
+
+    if 'libx264' not in out.getvalue():
+        print ''
+        print (
+            "%s: Installed version of ffmeg doesn't include libx264 support."
+            "Install version of ffmpeg that supports libx264."
+        ) % (
             PROG_NAME
         )
         exit(1)
+
+    if 'libfaac' in out.getvalue():
+        config.audio_encoder_opts = [
+            '-codec:a', 'libfaac'
+        ]
+    else:
+        config.audio_encoder_opts = [
+            '-strict', 'experimantal',
+            '-codec:a', 'aac'
+        ]
 
 
 def cache_file(filename):
@@ -260,11 +286,20 @@ def main():
         'input_file',
         help='file or directory to convert to mp4'
     )
+    parser.add_argument(
+        '-n', '--dry-run',
+        dest='dry_run',
+        action='store_true',
+        help=(
+            "Don't actually do the conversion, "
+            "just show the command(s) that would be executed"
+        )
+    )
 
     args = parser.parse_args()
     input_file = args.input_file.strip()
     if not os.path.exists(input_file):
-        print '%s: %s: No such file or directory' % (PROG_NAME, filename)
+        print '%s: %s: No such file or directory' % (PROG_NAME, input_file)
         exit(1)
 
     check_required_programs()
@@ -272,10 +307,10 @@ def main():
     os.chdir(tempfile.gettempdir())
 
     if os.path.isfile(input_file):
-        convert(input_file)
+        convert(input_file, args)
     else:
         for file in os.listdir(input_file):
             name, ext = os.path.splitext(file)
             file = os.path.join(input_file, file)
             if os.path.isfile(file) and ext.lower() in VIDEO_EXTENSIONS:
-                convert(file)
+                convert(file, args)
