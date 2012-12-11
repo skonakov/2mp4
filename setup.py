@@ -12,15 +12,18 @@ Operating System :: Unix
 """
 
 
-try:
-    version = subprocess.Popen(
-        ['git', 'describe', '--tags'],
-        stderr=subprocess.PIPE,
-        stdout=subprocess.PIPE
-    ).communicate()[0].strip()
+p = subprocess.Popen(
+    ['git', 'describe', '--tags'],
+    stderr=subprocess.PIPE,
+    stdout=subprocess.PIPE,
+    shell=False
+)
+p.wait()
+if p.returncode == 0:
+    version = p.communicate()[0].strip()
     with open('.version', 'w') as version_file:
         version_file.write(version)
-except:
+else:
     with open('.version', 'r') as version_file:
         version = version_file.readline().strip()
 
