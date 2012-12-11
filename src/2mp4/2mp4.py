@@ -159,17 +159,18 @@ def convert(filename, args):
     sys.stderr.write('Encoding %s -> %s\n' % (filename, out_file_name))
 
     if os.path.exists(out_path):
-        sys.stderr.write('Destination file exists, skipping...')
+        print('Destination file exists, skipping...')
+        return
 
     if method == '1pass':
         opts = input_ops + video_opts + audio_opts + [
             '-y',
             out_path
         ]
-        progress = EncodingProgress('Pass 1 of 1:', info.video.frame_count)
         if args.dry_run:
             print 'ffmpeg ' + ' '.join(opts)
         else:
+            progress = EncodingProgress('Pass 1 of 1:', info.video.frame_count)
             p = sh.ffmpeg(
                 *opts,
                 _err=progress.process_ffmpeg_line,
@@ -178,7 +179,6 @@ def convert(filename, args):
             p.wait()
             progress.finish()
     elif method == '2pass':
-        pass1_progress = EncodingProgress('Pass 1 of 2: ', info.video.frame_count)
         opts = input_ops + video_opts + [
             '-an',
             '-pass', '1',
@@ -189,6 +189,10 @@ def convert(filename, args):
         if args.dry_run:
             print 'ffmpeg ' + ' '.join(opts)
         else:
+            pass1_progress = EncodingProgress(
+                'Pass 1 of 2: ',
+                info.video.frame_count
+            )
             p = sh.ffmpeg(
                 *opts,
                 _err=pass1_progress.process_ffmpeg_line,
@@ -197,10 +201,6 @@ def convert(filename, args):
             p.wait()
             pass1_progress.finish()
 
-        pass2_progress = EncodingProgress(
-            'Pass 2 of 2: ',
-            info.video.frame_count
-        )
         opts = input_ops + video_opts + audio_opts + [
             '-pass', '2',
             '-y',
@@ -209,6 +209,10 @@ def convert(filename, args):
         if args.dry_run:
             print 'ffmpeg ' + ' '.join(opts)
         else:
+            pass2_progress = EncodingProgress(
+                'Pass 2 of 2: ',
+                info.video.frame_count
+            )
             p = sh.ffmpeg(
                 *opts,
                 _err=pass2_progress.process_ffmpeg_line,
