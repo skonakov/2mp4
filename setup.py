@@ -35,6 +35,7 @@ setup(
     author_email='skonakov@gmail.com',
     packages=find_packages('src'),
     package_dir={'': 'src'},
+    package_data={'': ['../../.version']},
     install_requires=['sh', 'progressbar', 'pymediainfo'],
     zip_safe=False,
     entry_points="""\
