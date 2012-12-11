@@ -147,8 +147,16 @@ def convert(filename, args):
         ]
     else:
         audio_opts = config.audio_encoder_opts + [
-            '-b:a', '160K'
+            '-b:a'
         ]
+        if info.audio.channel_s >= 6:
+            audio_opts.append('320K')
+        else:
+            audio_opts.append('160K')
+
+    subtitle_opts = [
+        '-codec:s', 'copy'
+    ]
 
     input_ops = [
         '-i', '%s' % filename,
@@ -163,7 +171,7 @@ def convert(filename, args):
         return
 
     if method == '1pass':
-        opts = input_ops + video_opts + audio_opts + [
+        opts = input_ops + video_opts + audio_opts + subtitle_opts + [
             '-y',
             out_path
         ]
@@ -201,7 +209,7 @@ def convert(filename, args):
             p.wait()
             pass1_progress.finish()
 
-        opts = input_ops + video_opts + audio_opts + [
+        opts = input_ops + video_opts + audio_opts + subtitle_opts + [
             '-pass', '2',
             '-y',
             out_path
@@ -240,19 +248,22 @@ def check_required_programs():
         )
 
     out = StringIO()
-    sh.ffmpeg(
-        '-encoders',
-        _out=out
-    )
+    try:
+        sh.ffmpeg(
+            '-encoders',
+            _out=out
+        )
+    except sh.ErrorReturnCode:
+        print (
+            '%s: unsupported version of ffmpeg installed. '
+            'Install ffmpeg version 1.0 or higher'
+        ) % PROG_NAME
 
     if 'libx264' not in out.getvalue():
-        print ''
         print (
-            "%s: Installed version of ffmeg doesn't include libx264 support."
+            "%s: Installed version of ffmeg doesn't include libx264 support. "
             "Install version of ffmpeg that supports libx264."
-        ) % (
-            PROG_NAME
-        )
+        ) % PROG_NAME
         exit(1)
 
     if 'libfaac' in out.getvalue():
@@ -301,7 +312,7 @@ def main():
     )
 
     args = parser.parse_args()
-    input_file = args.input_file.strip()
+    input_file = os.path.abspath(args.input_file.strip())
     if not os.path.exists(input_file):
         print '%s: %s: No such file or directory' % (PROG_NAME, input_file)
         exit(1)
