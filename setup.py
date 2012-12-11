@@ -15,6 +15,7 @@ Operating System :: Unix
 try:
     version = subprocess.Popen(
         ['git', 'describe', '--tags'],
+        stderr=subprocess.PIPE,
         stdout=subprocess.PIPE
     ).communicate()[0].strip()
     with open('.version', 'w') as version_file:
