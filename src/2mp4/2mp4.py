@@ -70,7 +70,7 @@ def get_media_info(file):
         '-f', file,
         _out=xmlIO
     )
-    mediainfo = MediaInfo(xmlIO.getvalue())
+    mediainfo = MediaInfo(xmlIO.getvalue().encode('utf-8'))
     for track in mediainfo.tracks:
         if track.track_type == 'Video':
             result.video = track
