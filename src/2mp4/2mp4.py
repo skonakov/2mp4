@@ -72,16 +72,18 @@ def get_media_info(file):
     )
     mediainfo = MediaInfo(xmlIO.getvalue().encode('utf-8'))
     for track in mediainfo.tracks:
-        if track.track_type == 'Video':
-            result.video = track
-        elif track.track_type == 'Audio':
-            result.audio = track
-        elif track.track_type == 'Text':
-            result.text = track
-        elif track.track_type == 'General':
-            result.general = track
-        else:
-            pass
+        type = track.track_type.lower()
+        if type not in result:
+            result[type] = list()
+
+        result[type].append(track)
+
+    if len(result.video) > 1:
+        print "2mp4 doesn't support files with multiple video streams :("
+        sys.exit(1)
+
+    result.video = result.video[0]
+    result.general = result.general[0]
 
     return result
 
@@ -141,18 +143,23 @@ def convert(filename, args):
             '-level', '4.1'
         ]
 
-    if info.audio.format == 'AAC':
-        audio_opts = [
-            '-codec:a', 'copy'
-        ]
-    else:
-        audio_opts = config.audio_encoder_opts + [
-            '-b:a'
-        ]
-        if info.audio.channel_s >= 6:
-            audio_opts.append('320K')
+    audio_opts = []
+    for audio in info.audio:
+        if audio.format == 'AAC':
+            audio_opts += [
+                '-map 0:%s' % audio.track_id,
+                '-codec:a:%s' % audio.track_id, 'copy'
+            ]
         else:
-            audio_opts.append('160K')
+            audio_opts += [
+                '-map 0:%s' % audio.track_id,
+                '-codec:a:%s' % audio.track_id,
+                '-b:a:%s' % audio.track_id
+            ]
+            if audio.channel_s >= 6:
+                audio_opts.append('320K')
+            else:
+                audio_opts.append('160K')
 
     subtitle_opts = [
         '-codec:s', 'copy'
