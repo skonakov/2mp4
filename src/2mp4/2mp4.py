@@ -132,13 +132,15 @@ def convert(filename, args):
     if info.video.format == 'AVC':
         method = '1pass'
         video_opts = [
-            '-codec:v', 'copy'
+            'map 0:%s' % info.video.track_id,
+            '-codec:v:%s' % info.video.track_id, 'copy'
         ]
     else:
         method = '2pass'
         video_opts = [
-            '-b:v', str(info.video.bit_rate),
-            '-codec:v', 'libx264',
+            '-map 0:%s' % info.video.track_id,
+            '-b:v:%s' % info.video.track_id, str(info.video.bit_rate),
+            '-codec:v:%s' % info.video.track_id, 'libx264',
             '-profile:v', 'high',
             '-level', '4.1'
         ]
@@ -153,7 +155,7 @@ def convert(filename, args):
         else:
             audio_opts += [
                 '-map 0:%s' % audio.track_id,
-                '-codec:a:%s' % audio.track_id,
+                '-codec:a:%s' % audio.track_id, 'libfaac',
                 '-b:a:%s' % audio.track_id
             ]
             if audio.channel_s >= 6:
