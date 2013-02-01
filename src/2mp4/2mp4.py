@@ -26,6 +26,7 @@ __author__ = 'Sergey Konakov <skonakov@gmail.com>'
 
 import argparse
 import os
+import pkg_resources
 import re
 import sh
 import sys
@@ -321,8 +322,14 @@ def main():
             "just show the command(s) that would be executed"
         )
     )
+    parser.add_argument(
+        '-v', '--version',
+        action='version',
+        version='2mp4 ' + pkg_resources.get_distribution('2mp4').version
+    )
 
     args = parser.parse_args()
+
     input_file = os.path.abspath(args.input_file.strip())
     if not os.path.exists(input_file):
         print '%s: %s: No such file or directory' % (PROG_NAME, input_file)
