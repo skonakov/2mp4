@@ -106,7 +106,9 @@ class EncodingProgress:
         )
         self.pbar.start()
 
-    def process_ffmpeg_line(self, line):
+    def process_ffmpeg_line(self, line, stdin, process):
+        process._stderr.append(line)
+
         lines = line.splitlines()
         for l in lines:
             match = self.FRAMES_RE.match(l)
@@ -132,15 +134,15 @@ def convert(filename, args):
     if info.video.format == 'AVC':
         method = '1pass'
         video_opts = [
-            'map 0:%s' % info.video.track_id,
+            '-map 0:%s' % info.video.track_id,
             '-codec:v:%s' % info.video.track_id, 'copy'
         ]
     else:
         method = '2pass'
         video_opts = [
-            '-map 0:%s' % info.video.track_id,
-            '-b:v:%s' % info.video.track_id, str(info.video.bit_rate),
-            '-codec:v:%s' % info.video.track_id, 'libx264',
+            '-map', '0:%s' % info.video.track_id,
+            '-b:v', str(info.video.bit_rate),
+            '-codec:v', 'libx264',
             '-profile:v', 'high',
             '-level', '4.1'
         ]
@@ -149,12 +151,12 @@ def convert(filename, args):
     for audio in info.audio:
         if audio.format == 'AAC':
             audio_opts += [
-                '-map 0:%s' % audio.track_id,
+                '-map', '0:%s' % audio.track_id,
                 '-codec:a:%s' % audio.track_id, 'copy'
             ]
         else:
             audio_opts += [
-                '-map 0:%s' % audio.track_id,
+                '-map', '0:%s' % audio.track_id,
                 '-codec:a:%s' % audio.track_id, 'libfaac',
                 '-b:a:%s' % audio.track_id
             ]
@@ -330,11 +332,21 @@ def main():
 
     os.chdir(tempfile.gettempdir())
 
-    if os.path.isfile(input_file):
-        convert(input_file, args)
-    else:
-        for file in os.listdir(input_file):
-            name, ext = os.path.splitext(file)
-            file = os.path.join(input_file, file)
-            if os.path.isfile(file) and ext.lower() in VIDEO_EXTENSIONS:
-                convert(file, args)
+    try:
+        if os.path.isfile(input_file):
+            convert(input_file, args)
+        else:
+            for file in os.listdir(input_file):
+                name, ext = os.path.splitext(file)
+                file = os.path.join(input_file, file)
+                if os.path.isfile(file) and ext.lower() in VIDEO_EXTENSIONS:
+                    convert(file, args)
+    except sh.ErrorReturnCode as e:
+        print
+        print
+        print "OUPS that wasn't supposed to happen!"
+        print
+        print 'STDERR:'
+        for line in StringIO(e.stderr):
+            print '\t', line,
+        exit(1)
