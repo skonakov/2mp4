@@ -170,6 +170,10 @@ def convert(filename, args):
         '-codec:s', 'copy'
     ]
 
+    metadata_opts = [
+        '-map_metadata', '0:g'
+    ]
+
     input_ops = [
         '-i', '%s' % filename,
     ]
@@ -183,7 +187,8 @@ def convert(filename, args):
         return
 
     if method == '1pass':
-        opts = input_ops + video_opts + audio_opts + subtitle_opts + [
+        opts = input_ops + video_opts + audio_opts + \
+               subtitle_opts + metadata_opts + [
             '-y',
             out_path
         ]
@@ -221,7 +226,8 @@ def convert(filename, args):
             p.wait()
             pass1_progress.finish()
 
-        opts = input_ops + video_opts + audio_opts + subtitle_opts + [
+        opts = input_ops + video_opts + audio_opts + \
+               subtitle_opts + metadata_opts + [
             '-pass', '2',
             '-y',
             out_path
