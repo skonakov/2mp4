@@ -71,22 +71,22 @@ def get_media_info(file):
         '-f', file,
         _out=xmlIO
     )
-    mediainfo = MediaInfo(xmlIO.getvalue().encode('utf-8'))
-    for track in mediainfo.tracks:
+
+    info = MediaInfo(xmlIO.getvalue().encode('utf-8'))
+    tracks = []
+
+    for track in info.tracks:
         type = track.track_type.lower()
-        if type not in result:
-            result[type] = list()
+        if type == 'video':
+            tracks.append(track)
+        elif type == 'audio':
+            tracks.append(track)
+        elif type == 'text':
+            tracks.append(track)
+        elif type == 'general':
+            general_info = track
 
-        result[type].append(track)
-
-    if len(result.video) > 1:
-        print "2mp4 doesn't support files with multiple video streams :("
-        sys.exit(1)
-
-    result.video = result.video[0]
-    result.general = result.general[0]
-
-    return result
+    return general_info, tracks
 
 
 class EncodingProgress:
@@ -128,58 +128,86 @@ class EncodingProgress:
         self.pbar.finish()
 
 
-def convert(filename, args):
-    cache_file(filename)
-    info = get_media_info(filename)
-
-    if info.video.format == 'AVC':
+def get_video_opts(index, track):
+    if track.format == 'AVC':
         method = '1pass'
         video_opts = [
-            '-map 0:%s' % info.video.track_id,
-            '-codec:v:%s' % info.video.track_id, 'copy'
+            '-map', '0:%s' % index,
+            '-codec:v', 'copy'
         ]
     else:
         method = '2pass'
         video_opts = [
-            '-map', '0:%s' % info.video.track_id,
-            '-b:v', str(info.video.bit_rate),
+            '-map', '0:%s' % index,
+            '-b:v', str(track.bit_rate),
             '-codec:v', 'libx264',
             '-profile:v', 'high',
             '-level', '4.1'
         ]
 
-    audio_opts = []
-    for audio in info.audio:
-        if audio.format == 'AAC':
-            audio_opts += [
-                '-map', '0:%s' % audio.track_id,
-                '-codec:a:%s' % audio.track_id, 'copy'
-            ]
+    return method, video_opts
+
+
+def get_audio_opts(index, track):
+    if track.format == 'AAC':
+        audio_opts = [
+            '-map', '0:%s' % index,
+            '-codec:a:%s' % index, 'copy'
+        ]
+    else:
+        audio_opts = [
+            '-map', '0:%s' % index,
+            '-codec:a:%s' % index, 'libfaac',
+            '-b:a:%s' % index
+        ]
+        if track.channel_s >= 6:
+            audio_opts.append('320K')
         else:
-            audio_opts += [
-                '-map', '0:%s' % audio.track_id,
-                '-codec:a:%s' % audio.track_id, 'libfaac',
-                '-b:a:%s' % audio.track_id
-            ]
-            if audio.channel_s >= 6:
-                audio_opts.append('320K')
-            else:
-                audio_opts.append('160K')
+            audio_opts.append('160K')
 
-    subtitle_opts = [
-        '-codec:s', 'copy'
+    return audio_opts
+
+
+def get_subtitle_opts(index, track):
+    return [
+        '-map', '0:%s' % index,
+        '-codec:s', 'mov_text'
     ]
 
+
+def convert(filename, args):
+    cache_file(filename)
+    general_info, tracks = get_media_info(filename)
+
+    method = None
+    video_opts = None
+    audio_opts = []
+    subtitle_opts = []
     metadata_opts = [
-        '-map_metadata', '0:g'
+        '-map_metadata', '0'
     ]
-
     input_ops = [
         '-i', '%s' % filename,
     ]
 
-    out_file_name = '%s.mp4' % info.general.file_name
-    out_path = os.path.join(info.general.folder_name, out_file_name)
+    for index, track in enumerate(tracks):
+        type = track.track_type.lower()
+        if type == 'video':
+            if method is not None:
+                raise Exception(
+                    "2mp4 currently doesn't support multiple video streams :("
+                )
+            method, video_opts = get_video_opts(index, track)
+            frame_count = track.frame_count
+            if frame_count is None:
+                frame_count = float(general_info.duration) / 1000 * float(track.original_frame_rate)
+        elif type == 'audio':
+            audio_opts += get_audio_opts(index, track)
+        elif type == 'text':
+            subtitle_opts += get_subtitle_opts(index, track)
+
+    out_file_name = '%s.mp4' % general_info.file_name
+    out_path = os.path.join(general_info.folder_name, out_file_name)
     sys.stderr.write('Encoding %s -> %s\n' % (filename, out_file_name))
 
     if os.path.exists(out_path):
@@ -195,7 +223,7 @@ def convert(filename, args):
         if args.dry_run:
             print 'ffmpeg ' + ' '.join(opts)
         else:
-            progress = EncodingProgress('Pass 1 of 1:', info.video.frame_count)
+            progress = EncodingProgress('Pass 1 of 1:', frame_count)
             p = sh.ffmpeg(
                 *opts,
                 _err=progress.process_ffmpeg_line,
@@ -214,10 +242,7 @@ def convert(filename, args):
         if args.dry_run:
             print 'ffmpeg ' + ' '.join(opts)
         else:
-            pass1_progress = EncodingProgress(
-                'Pass 1 of 2: ',
-                info.video.frame_count
-            )
+            pass1_progress = EncodingProgress( 'Pass 1 of 2: ', frame_count)
             p = sh.ffmpeg(
                 *opts,
                 _err=pass1_progress.process_ffmpeg_line,
@@ -235,10 +260,7 @@ def convert(filename, args):
         if args.dry_run:
             print 'ffmpeg ' + ' '.join(opts)
         else:
-            pass2_progress = EncodingProgress(
-                'Pass 2 of 2: ',
-                info.video.frame_count
-            )
+            pass2_progress = EncodingProgress('Pass 2 of 2: ', frame_count)
             p = sh.ffmpeg(
                 *opts,
                 _err=pass2_progress.process_ffmpeg_line,
