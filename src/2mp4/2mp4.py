@@ -64,8 +64,7 @@ config = AttrDict()
 
 
 def get_media_info(file):
-    result = AttrDict()
-    xmlIO  = StringIO()
+    xmlIO = StringIO()
     sh.mediainfo(
         '--Output=XML',
         '-f', file,
@@ -77,20 +76,17 @@ def get_media_info(file):
 
     for track in info.tracks:
         type = track.track_type.lower()
-        if type == 'video':
-            tracks.append(track)
-        elif type == 'audio':
-            tracks.append(track)
-        elif type == 'text':
-            tracks.append(track)
-        elif type == 'general':
+        if type == 'general':
             general_info = track
+        else:
+            tracks.append(track)
 
     return general_info, tracks
 
 
 class EncodingProgress:
     FRAMES_RE = re.compile(r'^frame=\s*(\d+) .*')
+
     def __init__(self, title, total_frames):
         widgets = [
             title,
@@ -191,8 +187,8 @@ def convert(filename, args):
     ]
 
     for index, track in enumerate(tracks):
-        type = track.track_type.lower()
-        if type == 'video':
+        track_type = track.track_type.lower()
+        if track_type == 'video':
             if method is not None:
                 raise Exception(
                     "2mp4 currently doesn't support multiple video streams :("
@@ -200,10 +196,14 @@ def convert(filename, args):
             method, video_opts = get_video_opts(index, track)
             frame_count = track.frame_count
             if frame_count is None:
-                frame_count = float(general_info.duration) / 1000 * float(track.original_frame_rate)
-        elif type == 'audio':
+                frame_count = float(
+                    general_info.duration
+                ) / 1000 * float(
+                    track.original_frame_rate
+                )
+        elif track_type == 'audio':
             audio_opts += get_audio_opts(index, track)
-        elif type == 'text':
+        elif track_type == 'text':
             subtitle_opts += get_subtitle_opts(index, track)
 
     out_file_name = '%s.mp4' % general_info.file_name
@@ -216,10 +216,10 @@ def convert(filename, args):
 
     if method == '1pass':
         opts = input_ops + video_opts + audio_opts + \
-               subtitle_opts + metadata_opts + [
-            '-y',
-            out_path
-        ]
+            subtitle_opts + metadata_opts + [
+                '-y',
+                out_path
+            ]
         if args.dry_run:
             print 'ffmpeg ' + ' '.join(opts)
         else:
@@ -242,7 +242,7 @@ def convert(filename, args):
         if args.dry_run:
             print 'ffmpeg ' + ' '.join(opts)
         else:
-            pass1_progress = EncodingProgress( 'Pass 1 of 2: ', frame_count)
+            pass1_progress = EncodingProgress('Pass 1 of 2: ', frame_count)
             p = sh.ffmpeg(
                 *opts,
                 _err=pass1_progress.process_ffmpeg_line,
@@ -252,11 +252,11 @@ def convert(filename, args):
             pass1_progress.finish()
 
         opts = input_ops + video_opts + audio_opts + \
-               subtitle_opts + metadata_opts + [
-            '-pass', '2',
-            '-y',
-            out_path
-        ]
+            subtitle_opts + metadata_opts + [
+                '-pass', '2',
+                '-y',
+                out_path
+            ]
         if args.dry_run:
             print 'ffmpeg ' + ' '.join(opts)
         else:
@@ -273,7 +273,9 @@ def convert(filename, args):
 def check_required_programs():
     # Check that mediainfo is installed
     if sh.which('mediainfo') is None:
-        print '%s: Cannot find mediainfo, please install before continuing.' % (
+        print (
+            '%s: Cannot find mediainfo, please install before continuing.'
+        ) % (
             PROG_NAME
         )
         exit(1)
