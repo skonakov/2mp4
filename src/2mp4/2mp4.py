@@ -81,6 +81,21 @@ def get_media_info(file):
         else:
             tracks.append(track)
 
+    track_ids = [track.track_id for track in tracks]
+
+    if set(track_ids) == set(range(0, len(tracks))):
+        pass
+    elif track_ids == set(range(1, len(tracks))):
+        track_ids = [track.track_id - 1 for track in tracks]
+    else:
+        track_ids = range(0, len(tracks))
+
+    for index, track in enumerate(tracks):
+        track.track_id = track_ids[index]
+
+
+    print [track.track_id for track in tracks]
+
     return general_info, tracks
 
 
@@ -193,7 +208,7 @@ def convert(filename, args):
                 raise Exception(
                     "2mp4 currently doesn't support multiple video streams :("
                 )
-            method, video_opts = get_video_opts(index, track)
+            method, video_opts = get_video_opts(track.track_id, track)
             frame_count = track.frame_count
             if frame_count is None:
                 frame_count = float(
@@ -202,9 +217,9 @@ def convert(filename, args):
                     track.original_frame_rate
                 )
         elif track_type == 'audio':
-            audio_opts += get_audio_opts(index, track)
+            audio_opts += get_audio_opts(track.track_id, track)
         elif track_type == 'text':
-            subtitle_opts += get_subtitle_opts(index, track)
+            subtitle_opts += get_subtitle_opts(track.track_id, track)
 
     out_file_name = '%s.mp4' % general_info.file_name
     out_path = os.path.join(general_info.folder_name, out_file_name)
