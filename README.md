@@ -25,7 +25,7 @@ Usage
 
 ```
 $ 2mp4 -h
-usage: 2mp4 [-h] [-n] input_file
+usage: 2mp4 [-h] [-n] [-v] input_file
 
 Convert [input_file] to mp4. The output video file will be created in the same
 directory named [input_file].mp4
@@ -37,5 +37,6 @@ optional arguments:
   -h, --help     show this help message and exit
   -n, --dry-run  Don't actually do the conversion, just show the command(s)
                  that would be executed
+  -v, --version  show program's version number and exit
 ```
 
