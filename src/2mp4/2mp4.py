@@ -223,7 +223,9 @@ def convert(filename, args):
 
     out_file_name = '%s.mp4' % general_info.file_name
     out_path = os.path.join(general_info.folder_name, out_file_name)
-    sys.stderr.write('Encoding %s -> %s\n' % (filename, out_file_name))
+    sys.stderr.write('Encoding %s -> %s\n' % (
+        filename, out_file_name.encode('utf-8'))
+    )
 
     if os.path.exists(out_path):
         print('Destination file exists, skipping...')
