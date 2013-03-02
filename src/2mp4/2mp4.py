@@ -81,18 +81,18 @@ def get_media_info(file):
         else:
             tracks.append(track)
 
-    track_ids = [track.track_id for track in tracks]
+    try:
+        track_ids = [int(track.track_id) for track in tracks]
+        min_id = min(track_ids)
+        track_ids = [int(track.track_id) - min_id for track in tracks]
+    except:
+        track_ids = []
 
-    if set(track_ids) == set(range(0, len(tracks))):
-        pass
-    elif track_ids == set(range(1, len(tracks))):
-        track_ids = [track.track_id - 1 for track in tracks]
-    else:
+    if set(track_ids) != set(range(0, len(tracks))):
         track_ids = range(0, len(tracks))
 
     for index, track in enumerate(tracks):
         track.track_id = track_ids[index]
-
 
     print [track.track_id for track in tracks]
 
