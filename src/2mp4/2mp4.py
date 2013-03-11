@@ -94,8 +94,6 @@ def get_media_info(file):
     for index, track in enumerate(tracks):
         track.track_id = track_ids[index]
 
-    print [track.track_id for track in tracks]
-
     return general_info, tracks
 
 
@@ -228,7 +226,7 @@ def convert(filename, args):
     )
 
     if os.path.exists(out_path):
-        print('Destination file exists, skipping...')
+        sys.stderr.write('Destination file exists, skipping...\n')
         return
 
     if method == '1pass':
