@@ -25,18 +25,20 @@ Usage
 
 ```
 $ 2mp4 -h
-usage: 2mp4 [-h] [-n] [-v] input_file
+usage: 2mp4 [-h] [-n] [-f] [-v] input_file
 
 Convert [input_file] to mp4. The output video file will be created in the same
 directory named [input_file].mp4
 
 positional arguments:
-  input_file     file or directory to convert to mp4
+  input_file          file or directory to convert to mp4
 
 optional arguments:
-  -h, --help     show this help message and exit
-  -n, --dry-run  Don't actually do the conversion, just show the command(s)
-                 that would be executed
-  -v, --version  show program's version number and exit
+  -h, --help          show this help message and exit
+  -n, --dry-run       Don't actually do the conversion, just show the
+                      command(s) that would be executed
+  -f, --force-encode  Force a re-encode of the video stream, even if it is
+                      already in a format supported by mp4 container.
+  -v, --version       show program's version number and exit
 ```
 

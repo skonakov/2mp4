@@ -137,8 +137,8 @@ class EncodingProgress:
         self.pbar.finish()
 
 
-def get_video_opts(index, track):
-    if track.format == 'AVC':
+def get_video_opts(index, track, force_encode=False):
+    if track.format == 'AVC' and not force_encode:
         method = '1pass'
         video_opts = [
             '-map', '0:%s' % index,
@@ -206,7 +206,11 @@ def convert(filename, args):
                 raise Exception(
                     "2mp4 currently doesn't support multiple video streams :("
                 )
-            method, video_opts = get_video_opts(track.track_id, track)
+            method, video_opts = get_video_opts(
+                track.track_id,
+                track,
+                force_encode=args.force_encode
+            )
             frame_count = track.frame_count
             if frame_count is None:
                 frame_count = float(
@@ -365,6 +369,16 @@ def main():
         help=(
             "Don't actually do the conversion, "
             "just show the command(s) that would be executed"
+        )
+    )
+    parser.add_argument(
+        '-f', '--force-encode',
+        dest='force_encode',
+        action='store_true',
+        default=False,
+        help=(
+            "Force a re-encode of the video stream, even if it is already "
+            "in a format supported by mp4 container."
         )
     )
     parser.add_argument(
