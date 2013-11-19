@@ -160,14 +160,18 @@ def get_video_opts(index, track, force_encode=False):
             '-codec:v', 'copy'
         ]
     else:
-        method = '2pass'
         video_opts = [
             '-map', '0:%s' % index,
-            '-b:v', str(track.bit_rate),
             '-codec:v', 'libx264',
             '-profile:v', 'high',
             '-level', '4.1'
         ]
+        if track.bit_rate:
+            method = '2pass'
+            video_opts = video_opts + ['-b:v', track.bit_rate]
+        else:
+            method = '1pass'
+            video_opts = video_opts + ['-crf', '18']
 
     return method, video_opts
 
