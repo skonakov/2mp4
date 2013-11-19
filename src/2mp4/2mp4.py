@@ -63,6 +63,16 @@ class AttrDict(dict):
 config = AttrDict()
 
 
+def get_out_file_name(in_path, in_file):
+    count = 1
+    out_file = '%s.mp4' % in_file
+    while os.path.exists(os.path.join(in_path, out_file)):
+        out_file = '%s__2mp4_%s__.mp4' % (in_file, count)
+        count += 1
+
+    return out_file
+
+
 def get_media_info(file):
     xmlIO = StringIO()
     sh.mediainfo(
@@ -75,8 +85,8 @@ def get_media_info(file):
     tracks = []
 
     for track in info.tracks:
-        type = track.track_type.lower()
-        if type == 'general':
+        track_type = track.track_type.lower()
+        if track_type == 'general':
             general_info = track
         else:
             tracks.append(track)
@@ -93,6 +103,11 @@ def get_media_info(file):
 
     for index, track in enumerate(tracks):
         track.track_id = track_ids[index]
+
+    folder_name, file_name = os.path.split(file)
+    filename, ext = os.path.splitext(file_name)
+    general_info.folder_name = folder_name
+    general_info.file_name = filename
 
     return general_info, tracks
 
@@ -223,7 +238,10 @@ def convert(filename, args):
         elif track_type == 'text':
             subtitle_opts += get_subtitle_opts(track.track_id, track)
 
-    out_file_name = '%s.mp4' % general_info.file_name
+    out_file_name = get_out_file_name(
+        general_info.folder_name,
+        general_info.file_name
+    )
     out_path = os.path.join(general_info.folder_name, out_file_name)
     sys.stderr.write('Encoding %s -> %s\n' % (
         filename, out_file_name.encode('utf-8'))
@@ -232,6 +250,14 @@ def convert(filename, args):
     if os.path.exists(out_path):
         sys.stderr.write('Destination file exists, skipping...\n')
         return
+
+    # Test that we can write to output path
+    try:
+        with open(out_path, 'wb'):
+            os.unlink(out_path)
+    except IOError as e:
+        print e
+        return sys.exit(e.errno)
 
     if method == '1pass':
         opts = input_ops + video_opts + audio_opts + \
