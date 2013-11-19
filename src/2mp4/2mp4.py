@@ -168,7 +168,7 @@ def get_video_opts(index, track, force_encode=False):
         ]
         if track.bit_rate:
             method = '2pass'
-            video_opts = video_opts + ['-b:v', track.bit_rate]
+            video_opts = video_opts + ['-b:v', str(track.bit_rate)]
         else:
             method = '1pass'
             video_opts = video_opts + ['-crf', '18']
