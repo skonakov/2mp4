@@ -1,3 +1,4 @@
+from collections import namedtuple
 import subprocess
 
 from setuptools import setup, find_packages
@@ -11,14 +12,18 @@ Topic :: Multimedia :: Video :: Conversion
 Operating System :: Unix
 """
 
+try:
+    p = subprocess.Popen(
+        ['gits', 'describe', '--tags'],
+        stderr=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        shell=False
+    )
+    p.wait()
+except:
+    p = namedtuple('Process', 'returncode')(1)
 
-p = subprocess.Popen(
-    ['git', 'describe', '--tags'],
-    stderr=subprocess.PIPE,
-    stdout=subprocess.PIPE,
-    shell=False
-)
-p.wait()
+
 if p.returncode == 0:
     version = p.communicate()[0].strip()
     with open('.version', 'w') as version_file:
@@ -40,7 +45,7 @@ setup(
     packages=find_packages('src'),
     package_dir={'': 'src'},
     package_data={'': ['../../.version']},
-    install_requires=['sh', 'progressbar', 'pymediainfo'],
+    install_requires=['sh', 'progressbar==2.2', 'pymediainfo'],
     zip_safe=False,
     entry_points="""\
     [console_scripts]

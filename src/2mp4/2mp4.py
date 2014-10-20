@@ -37,8 +37,7 @@ from progressbar import (
     Percentage,
     Bar,
     ETA,
-    FileTransferSpeed,
-    Timer
+    FileTransferSpeed
 )
 from pymediainfo import MediaInfo
 from StringIO import StringIO
@@ -120,7 +119,6 @@ class EncodingProgress:
             title,
             Percentage(), ' ',
             Bar(), ' ',
-            Timer(), ' ',
             ETA(), ' ',
             FileTransferSpeed(unit='Frames')
         ]
