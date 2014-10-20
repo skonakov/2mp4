@@ -120,7 +120,7 @@ class EncodingProgress:
             Percentage(), ' ',
             Bar(), ' ',
             ETA(), ' ',
-            FileTransferSpeed(unit='Frames')
+            FileTransferSpeed()
         ]
         self.pbar = ProgressBar(
             widgets=widgets,

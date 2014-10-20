@@ -14,7 +14,7 @@ Operating System :: Unix
 
 try:
     p = subprocess.Popen(
-        ['gits', 'describe', '--tags'],
+        ['git', 'describe', '--tags'],
         stderr=subprocess.PIPE,
         stdout=subprocess.PIPE,
         shell=False
@@ -23,10 +23,9 @@ try:
 except:
     p = namedtuple('Process', 'returncode')(1)
 
-
 if p.returncode == 0:
     version = p.communicate()[0].strip()
-    with open('.version', 'w') as version_file:
+    with open('.version', 'w+') as version_file:
         version_file.write(version)
 else:
     with open('.version', 'r') as version_file:
