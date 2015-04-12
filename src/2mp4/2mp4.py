@@ -40,7 +40,11 @@ from progressbar import (
     FileTransferSpeed
 )
 from pymediainfo import MediaInfo
-from StringIO import StringIO
+
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 
 PROG_NAME = __name__.split('.')[0]
@@ -73,14 +77,14 @@ def get_out_file_name(in_path, in_file):
 
 
 def get_media_info(file):
-    xmlIO = StringIO()
+    xml_io = StringIO()
     sh.mediainfo(
         '--Output=XML',
         '-f', file,
-        _out=xmlIO
+        _out=xml_io
     )
 
-    info = MediaInfo(xmlIO.getvalue().encode('utf-8'))
+    info = MediaInfo(xml_io.getvalue())
     tracks = []
 
     for track in info.tracks:
@@ -130,7 +134,7 @@ class EncodingProgress:
         self.pbar.start()
 
     def process_ffmpeg_line(self, line, stdin, process):
-        process._stderr.append(line)
+        process._stderr.append(line.encode())
 
         lines = line.splitlines()
         for l in lines:
@@ -143,8 +147,8 @@ class EncodingProgress:
                     try:
                         self.pbar.update(value=frame)
                     except Exception as e:
-                        print 'Frame: %s, error: %s' % (frame, e.message)
-                        print line
+                        print('Frame: %s, error: %s' % (frame, e.message))
+                        print(line)
 
     def finish(self):
         self.pbar.finish()
@@ -245,12 +249,12 @@ def convert(filename, args):
         general_info.file_name
     )
     out_path = os.path.join(general_info.folder_name, out_file_name)
-    sys.stderr.write('Encoding %s -> %s\n' % (
-        filename, out_file_name.encode('utf-8'))
+    print('Encoding %s -> %s' % (
+        filename, out_file_name)
     )
 
     if os.path.exists(out_path):
-        sys.stderr.write('Destination file exists, skipping...\n')
+        print('Destination file exists, skipping...')
         return
 
     # Test that we can write to output path
@@ -258,7 +262,7 @@ def convert(filename, args):
         with open(out_path, 'wb'):
             os.unlink(out_path)
     except IOError as e:
-        print e
+        print(e)
         return sys.exit(e.errno)
 
     if method == '1pass':
@@ -268,7 +272,7 @@ def convert(filename, args):
                 out_path
             ]
         if args.dry_run:
-            print 'ffmpeg ' + ' '.join(opts)
+            print('ffmpeg ' + ' '.join(opts))
         else:
             progress = EncodingProgress('Pass 1 of 1:', frame_count)
             p = sh.ffmpeg(
@@ -287,7 +291,7 @@ def convert(filename, args):
             '/dev/null'
         ]
         if args.dry_run:
-            print 'ffmpeg ' + ' '.join(opts)
+            print('ffmpeg ' + ' '.join(opts))
         else:
             pass1_progress = EncodingProgress('Pass 1 of 2: ', frame_count)
             p = sh.ffmpeg(
@@ -305,7 +309,7 @@ def convert(filename, args):
                 out_path
             ]
         if args.dry_run:
-            print 'ffmpeg ' + ' '.join(opts)
+            print('ffmpeg ' + ' '.join(opts))
         else:
             pass2_progress = EncodingProgress('Pass 2 of 2: ', frame_count)
             p = sh.ffmpeg(
@@ -320,7 +324,7 @@ def convert(filename, args):
 def check_required_programs():
     # Check that mediainfo is installed
     if sh.which('mediainfo') is None:
-        print (
+        print(
             '%s: Cannot find mediainfo, please install before continuing.'
         ) % (
             PROG_NAME
@@ -329,7 +333,7 @@ def check_required_programs():
 
     # Check that ffmpeg is installed
     if sh.which('ffmpeg') is None:
-        print (
+        print(
             '%s: Cannot find ffmpeg. '
             'Please install ffmpeg version 1.0 or later.'
         ) % (
@@ -343,13 +347,13 @@ def check_required_programs():
             _out=out
         )
     except sh.ErrorReturnCode:
-        print (
+        print(
             '%s: unsupported version of ffmpeg installed. '
             'Install ffmpeg version 1.0 or higher'
         ) % PROG_NAME
 
     if 'libx264' not in out.getvalue():
-        print (
+        print(
             "%s: Installed version of ffmeg doesn't include libx264 support. "
             "Install version of ffmpeg that supports libx264."
         ) % PROG_NAME
@@ -382,13 +386,13 @@ def main():
     parser = argparse.ArgumentParser(
         prog=PROG_NAME,
         description="""\
-            Convert [input_file] to mp4. The output video file will be created
-            in the same directory named [input_file].mp4
+            Convert [input_files] to mp4.
         """
     )
     parser.add_argument(
-        'input_file',
-        help='file or directory to convert to mp4'
+        'input_files',
+        nargs='+',
+        help='files or directories to convert to mp4'
     )
     parser.add_argument(
         '-n', '--dry-run',
@@ -417,30 +421,34 @@ def main():
 
     args = parser.parse_args()
 
-    input_file = os.path.abspath(args.input_file.strip())
-    if not os.path.exists(input_file):
-        print '%s: %s: No such file or directory' % (PROG_NAME, input_file)
-        exit(1)
-
     check_required_programs()
+
+    input_files = [
+        os.path.abspath(input_file.strip()) for input_file in args.input_files
+    ]
 
     os.chdir(tempfile.gettempdir())
 
-    try:
-        if os.path.isfile(input_file):
-            convert(input_file, args)
-        else:
-            for file in os.listdir(input_file):
-                name, ext = os.path.splitext(file)
-                file = os.path.join(input_file, file)
-                if os.path.isfile(file) and ext.lower() in VIDEO_EXTENSIONS:
-                    convert(file, args)
-    except sh.ErrorReturnCode as e:
-        print
-        print
-        print "OUPS that wasn't supposed to happen!"
-        print
-        print 'STDERR:'
-        for line in StringIO(e.stderr):
-            print '\t', line,
-        exit(1)
+    for input_file in input_files:
+        if not os.path.exists(input_file):
+            print('%s: %s: No such file or directory' % (PROG_NAME, input_file))
+            exit(1)
+
+        try:
+            if os.path.isfile(input_file):
+                convert(input_file, args)
+            else:
+                for file in os.listdir(input_file):
+                    name, ext = os.path.splitext(file)
+                    file = os.path.join(input_file, file)
+                    if os.path.isfile(file) and ext.lower() in VIDEO_EXTENSIONS:
+                        convert(file, args)
+        except sh.ErrorReturnCode as e:
+            print('')
+            print('')
+            print("OUPS that wasn't supposed to happen!")
+            print('')
+            print('STDERR:')
+            for line in StringIO(e.stderr.decode()):
+                print('\t %s' % line.strip())
+            exit(1)

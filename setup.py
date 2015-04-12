@@ -24,7 +24,7 @@ except:
     p = namedtuple('Process', 'returncode')(1)
 
 if p.returncode == 0:
-    version = p.communicate()[0].strip()
+    version = p.communicate()[0].strip().decode()
     with open('.version', 'w+') as version_file:
         version_file.write(version)
 else:
@@ -44,7 +44,7 @@ setup(
     packages=find_packages('src'),
     package_dir={'': 'src'},
     package_data={'': ['../../.version']},
-    install_requires=['sh', 'progressbar==2.2', 'pymediainfo'],
+    install_requires=['sh', 'progressbar2', 'pymediainfo', 'lxml'],
     zip_safe=False,
     entry_points="""\
     [console_scripts]
