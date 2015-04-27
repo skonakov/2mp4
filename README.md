@@ -1,4 +1,4 @@
-2mp4
+2mp4 [![Build Status](https://travis-ci.org/skonakov/2mp4.svg?branch=master)](https://travis-ci.org/skonakov/2mp4)
 ====
 Easily convert video files to .mp4
 
