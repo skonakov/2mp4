@@ -7,10 +7,9 @@ pyflakes:
 lint: pep8 pyflakes
 
 travistest:
-	which ${PYTHON}
-	${PYTHON} --version
+	python --version
 
-	${PYTHON} setup.py install
+	python setup.py install
 	2mp4 -v
 
 travis:
