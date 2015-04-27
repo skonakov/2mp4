@@ -1,4 +1,4 @@
-2mp4 [![Build Status](https://travis-ci.org/skonakov/2mp4.svg?branch=master)](https://travis-ci.org/skonakov/2mp4)
+2mp4 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/skonakov/2mp4/master/LICENSE) [![PyPI](https://img.shields.io/pypi/v/2mp4.svg)]()  [![Build Status](https://travis-ci.org/skonakov/2mp4.svg?branch=master)](https://travis-ci.org/skonakov/2mp4)
 ====
 Easily convert video files to .mp4
 
