@@ -49,7 +49,7 @@ setup(
     packages=find_packages('src'),
     package_dir={'': 'src'},
     package_data={'': ['../../.version']},
-    install_requires=['sh', 'progressbar2', 'pymediainfo', 'lxml'],
+    install_requires=requirements,
     zip_safe=False,
     entry_points="""\
     [console_scripts]
