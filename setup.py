@@ -1,6 +1,7 @@
-from collections import namedtuple
 import subprocess
+import sys
 
+from collections import namedtuple
 from setuptools import setup, find_packages
 
 
@@ -30,6 +31,10 @@ if p.returncode == 0:
 else:
     with open('.version', 'r') as version_file:
         version = version_file.readline().strip()
+
+requirements = ['sh', 'progressbar2', 'pymediainfo']
+if sys.version_info[0] == 3:
+    requirements.extend(['beautifulsoup4', 'lxml'])
 
 
 setup(
