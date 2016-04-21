@@ -47,7 +47,7 @@ setup(
     author='Sergey Konakov',
     author_email='skonakov@gmail.com',
     packages=find_packages('src'),
-    package_dir={'': 'src'},
+    package_dir={'': '.'},
     package_data={'': ['../../.version']},
     install_requires=requirements,
     zip_safe=False,

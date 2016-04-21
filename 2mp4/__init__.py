@@ -123,7 +123,7 @@ class EncodingProgress:
             Percentage(), ' ',
             Bar(), ' ',
             ETA(), ' ',
-            FileTransferSpeed()
+            FileTransferSpeed(unit='Frames')
         ]
         self.pbar = ProgressBar(
             widgets=widgets,
@@ -140,8 +140,8 @@ class EncodingProgress:
             match = self.FRAMES_RE.match(l)
             if match is not None:
                 frame = int(match.groups()[0])
-                if frame > self.pbar.maxval:
-                    self.pbar.update(value=self.pbar.maxval)
+                if frame > self.pbar.max_value:
+                    self.pbar.update(value=self.pbar.max_value)
                 else:
                     try:
                         self.pbar.update(value=frame)
@@ -430,7 +430,9 @@ def main():
 
     for input_file in input_files:
         if not os.path.exists(input_file):
-            print('%s: %s: No such file or directory' % (PROG_NAME, input_file))
+            print(
+                '%s: %s: No such file or directory' % (PROG_NAME, input_file)
+            )
             exit(1)
 
         try:
@@ -440,7 +442,10 @@ def main():
                 for file in os.listdir(input_file):
                     name, ext = os.path.splitext(file)
                     file = os.path.join(input_file, file)
-                    if os.path.isfile(file) and ext.lower() in VIDEO_EXTENSIONS:
+                    if(
+                        os.path.isfile(file) and
+                        ext.lower() in VIDEO_EXTENSIONS
+                    ):
                         convert(file, args)
         except sh.ErrorReturnCode as e:
             print('')

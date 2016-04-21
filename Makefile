@@ -1,8 +1,8 @@
 pep8:
-	pep8 src
+	pep8 2mp4
 
 pyflakes:
-	pyflakes src
+	pyflakes 2mp4
 
 lint: pep8 pyflakes
 
@@ -11,6 +11,9 @@ travistest:
 
 	python setup.py install
 	2mp4 -v
+
+dist:
+	python setup.py sdist
 
 travis:
 	pip install -q pep8
@@ -22,4 +25,4 @@ travis:
 	make travistest
 
 
-.PHONY: pep8 pyflakes lint travistest travis
+.PHONY: pep8 pyflakes lint travistest travis dist
