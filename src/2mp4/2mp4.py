@@ -22,7 +22,6 @@
 #
 ###############################################################################
 
-__author__ = 'Sergey Konakov <skonakov@gmail.com>'
 
 import argparse
 import os

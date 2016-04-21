@@ -53,7 +53,7 @@ setup(
     zip_safe=False,
     entry_points="""\
     [console_scripts]
-    2mp4 = 2mp4.2mp4:main
+    2mp4 = 2mp4:main
     """,
     classifiers=filter(None, classifiers.split('\n')),
     #long_description=read('README.rst') + '\n\n' + read('CHANGES'),
