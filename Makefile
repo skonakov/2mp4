@@ -15,6 +15,9 @@ travistest:
 dist:
 	python setup.py sdist
 
+clean:
+	rm -f dist/*
+
 travis:
 	pip install -q pep8
 	#make pep8
@@ -25,4 +28,5 @@ travis:
 	make travistest
 
 
-.PHONY: pep8 pyflakes lint travistest travis dist
+.PHONY: pep8 pyflakes lint travistest travis dist clean
+

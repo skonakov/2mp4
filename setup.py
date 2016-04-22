@@ -2,7 +2,7 @@ import subprocess
 import sys
 
 from collections import namedtuple
-from setuptools import setup, find_packages
+from setuptools import setup
 
 
 classifiers = """\
@@ -46,9 +46,9 @@ setup(
     description='Simple utility to convert your video files into mp4s.',
     author='Sergey Konakov',
     author_email='skonakov@gmail.com',
-    packages=find_packages('src'),
-    package_dir={'': '.'},
-    package_data={'': ['../../.version']},
+    packages=['2mp4'],
+    package_dir={'2mp4': '2mp4'},
+    package_data={'2mp4': ['../.version']},
     install_requires=requirements,
     zip_safe=False,
     entry_points="""\
