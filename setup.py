@@ -46,14 +46,14 @@ setup(
     description='Simple utility to convert your video files into mp4s.',
     author='Sergey Konakov',
     author_email='skonakov@gmail.com',
-    packages=['2mp4'],
-    package_dir={'2mp4': '2mp4'},
-    package_data={'2mp4': ['../.version']},
+    packages=['v2mp4'],
+    package_dir={'v2mp4': '2mp4'},
+    package_data={'v2mp4': ['../.version']},
     install_requires=requirements,
     zip_safe=False,
     entry_points="""\
     [console_scripts]
-    2mp4 = 2mp4:main
+    2mp4 = v2mp4:main
     """,
     classifiers=filter(None, classifiers.split('\n')),
     #long_description=read('README.rst') + '\n\n' + read('CHANGES'),

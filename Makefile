@@ -6,14 +6,17 @@ pyflakes:
 
 lint: pep8 pyflakes
 
-travistest:
+travistest: clean wheel
 	python --version
 
-	python setup.py install
+	cd dist && pip install *.whl
 	2mp4 -v
 
 dist:
 	python setup.py sdist
+
+wheel:
+	python setup.py bdist_wheel
 
 clean:
 	rm -f dist/*
@@ -25,8 +28,9 @@ travis:
 	pip install -q pyflakes
 	make pyflakes
 
+	pip install -q wheel
 	make travistest
 
 
-.PHONY: pep8 pyflakes lint travistest travis dist clean
+.PHONY: pep8 pyflakes lint travistest travis dist wheel clean
 
