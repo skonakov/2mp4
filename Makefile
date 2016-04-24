@@ -1,8 +1,8 @@
 pep8:
-	pep8 2mp4
+	pep8 py2mp4
 
 pyflakes:
-	pyflakes 2mp4
+	pyflakes py2mp4
 
 lint: pep8 pyflakes
 
