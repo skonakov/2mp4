@@ -46,7 +46,7 @@ except ImportError:
     from io import StringIO
 
 
-PROG_NAME = __name__.split('.')[0]
+PROG_NAME = '2mp4'
 VIDEO_EXTENSIONS = (
     '.avi',
     '.mkv',
@@ -186,7 +186,7 @@ def get_audio_opts(index, track):
     else:
         audio_opts = [
             '-map', '0:%s' % index,
-            '-codec:a:%s' % index, 'libfaac',
+            '-codec:a:%s' % index, config.audio_encoder,
             '-b:a:%s' % index
         ]
         if track.channel_s >= 6:
@@ -266,7 +266,7 @@ def convert(filename, args):
 
     if method == '1pass':
         opts = input_ops + video_opts + audio_opts + \
-            subtitle_opts + metadata_opts + [
+            subtitle_opts + metadata_opts + config.extra_opts + [
                 '-y',
                 out_path
             ]
@@ -358,15 +358,10 @@ def check_required_programs():
         ) % PROG_NAME
         exit(1)
 
-    if 'libfaac' in out.getvalue():
-        config.audio_encoder_opts = [
-            '-codec:a', 'libfaac'
-        ]
-    else:
-        config.audio_encoder_opts = [
-            '-strict', 'experimantal',
-            '-codec:a', 'aac'
-        ]
+    config.extra_opts = ['-strict', 'experimental']
+    config.audio_encoder = 'libfaac'
+    if 'libfaac' not in out.getvalue():
+        config.audio_encoder = 'aac'
 
 
 def cache_file(filename):
